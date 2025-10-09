@@ -42,6 +42,8 @@ services:
       ENABLE_RCON: "TRUE"
       RCON_PASSWORD: "poopscoop2"
 
+      ALLOW_FLIGHT: "TRUE"
+
       # Make the sync deterministic
       MODRINTH_FORCE_SYNCHRONIZE: "true"
 
