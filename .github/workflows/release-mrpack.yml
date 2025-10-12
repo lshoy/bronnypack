@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*.*.*"   # e.g. v1.0.0
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to create (e.g., v1.2.3)"
+        required: true
+        type: string
 
 permissions:
   contents: write  # needed for releases + pushing latest.json
@@ -84,5 +90,22 @@ jobs:
           git add latest.json
           git commit -m "chore: update latest.json for ${GITHUB_REF_NAME}" || echo "No changes to commit"
           git push origin HEAD:${{ env.DEFAULT_BRANCH }}
+
+
+  create_tag:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create tag on current default-branch HEAD
+        env:
+          TAG: ${{ inputs.tag }}
+          SHA: ${{ github.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/git/refs \
+            -d "{\"ref\":\"refs/tags/${TAG}\",\"sha\":\"${SHA}\"}"
 
 
