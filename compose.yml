@@ -13,7 +13,7 @@ services:
 
       # Install from your hosted .mrpack (auto-installs loader; updates on container start)
       TYPE: "MODRINTH"
-      MODRINTH_MODPACK: "https://github.com/lshoy/bronnypack/releases/latest/download/BronnyPack.mrpack"
+      MODRINTH_MODPACK: "https://github.com/lshoy/bronnypack/releases/latest/download/BronnyPack.mrpack?nocache=${MRPACK_NOCACHE}"
 
       # Server access
       ENABLE_RCON: "TRUE"
@@ -21,11 +21,30 @@ services:
 
       ALLOW_FLIGHT: "TRUE"
 
-      # Make the sync deterministic
-      MODRINTH_FORCE_SYNCHRONIZE: "true"
+      # Bump this to force a fresh download of the .mrpack (avoids CDN caching)
+      MRPACK_NOCACHE: "2025-10-12-1"
+
+      # Avoid pruning/removing files not in the modpack (preserve local configs)
+      MODRINTH_FORCE_SYNCHRONIZE: "false"
 
       # Turn off the image’s built-in include/exclude heuristics
       MODRINTH_DEFAULT_EXCLUDE_INCLUDES: ""
+
+      # Auto-enable AllTheMons datapack on NEW worlds (expects world/datapacks/AllTheMons.zip)
+      INITIAL_ENABLED_PACKS: "vanilla, file/AllTheMons"
+
+      # Auto-install AllTheMons datapack into the CURRENT world's datapacks folder
+      DOWNLOAD_URLS: |
+        https://cdn.modrinth.com/data/JV5dvqVX/versions/ulwWbVUc/AllTheMons%20Release%202.4.zip -> /data/world/datapacks/AllTheMons.zip
+
+      # Auto-enable the datapack on server start (for existing world)
+      RCON_CMDS_STARTUP: |
+        datapack enable "file/AllTheMons"
+        reload
+
+      # Distribute the AllTheMons resource pack to clients (direct CDN url + SHA1 recommended)
+      RESOURCE_PACK: "https://cdn.modrinth.com/data/JV5dvqVX/versions/ulwWbVUc/AllTheMons%20Release%202.4.zip"
+      RESOURCE_PACK_SHA1: "B4C519A3620D036C17B7DAA20D44B962E9B32A9B"
 
       # Exclude only the client-only mods actually in your mrpack (newline-separated partial names)
       MODRINTH_EXCLUDE_FILES: |
@@ -36,6 +55,7 @@ services:
         cobblemon-ui-tweaks-
         CobblemonMoveInspector-
         continuity-
+        controlling-
         distraction_free_recipes-
         emoji-type-
         enchdesc-
@@ -60,10 +80,14 @@ services:
         sodium-
         XaeroZoomout-
         zume-
+        # Also exclude local server configs from being overwritten by modpack overrides
+        config/cobblemon/main.json
+        config/rctmod-server.toml
  
       # skip temp connector jars bundled in overrides, if present
       MODRINTH_OVERRIDES_EXCLUSIONS: |
         mods/.connector/**
+        config/**
     volumes:
       - ./data:/data
     restart: unless-stopped
