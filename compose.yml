@@ -1,30 +1,7 @@
 services:
-  # 1) One-shot backup that must complete BEFORE the server starts
-  prebackup:
-    image: alpine:3
-    container_name: mc-prebackup
-    restart: "no"
-    environment:
-      TZ: "America/Chicago"
-    volumes:
-      - ./data:/data:ro        # read-only snapshot of the server data
-      - ./backups:/backups     # backups will be written here
-    entrypoint: ["/bin/sh","-c"]
-    command: >
-      set -e;
-      mkdir -p /backups;
-      ts=$(date +%Y%m%d-%H%M%S);
-      echo "==> Creating pre-start backup /backups/prestart-$ts.tgz";
-      tar -czf /backups/prestart-$ts.tgz
-        --exclude='*.jar' --exclude='cache' --exclude='logs' --exclude='*.tmp'
-        -C /data .
-
   mc:
     image: itzg/minecraft-server:java21
     container_name: mc-neoforge
-    depends_on:
-      prebackup:
-        condition: service_completed_successfully  # wait for backup to finish
     tty: true
     stdin_open: true
     ports:
