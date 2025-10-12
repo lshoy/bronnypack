@@ -97,6 +97,13 @@ jobs:
           git commit -m "chore: update latest.json for ${GITHUB_REF_NAME}" || echo "No changes to commit"
           git push origin HEAD:refs/heads/${{ env.DEFAULT_BRANCH }}
 
+      - name: Attach latest.json to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            mainBranch/latest.json
+
 
   create_tag:
     if: github.event_name == 'workflow_dispatch'
