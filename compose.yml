@@ -18,7 +18,7 @@ services:
 
       # Bump this to force "modpack refresh" logic when desired; manifest-based refresh in pre-init clears
       # /data/mods automatically when the published modpack version changes.
-      MRPACK_NOCACHE: "1"
+      MRPACK_NOCACHE: "3"
 
       # Explicit world folder name for datapack path
       LEVEL: "world"
