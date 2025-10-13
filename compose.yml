@@ -2,6 +2,7 @@ services:
   mc:
     image: itzg/minecraft-server:java21
     container_name: mc-neoforge
+    entrypoint: [/data/refresh-wrapper.sh]
     tty: true
     stdin_open: true
     ports:
@@ -11,42 +12,28 @@ services:
       TZ: "America/Chicago"
       MEMORY: "12G"
 
-      # Install from your hosted .mrpack (auto-installs loader; updates on container start)
+      # --- Modpack from your hosted .mrpack (cache-bust supported, no .env needed) ---
       TYPE: "MODRINTH"
-      MODRINTH_MODPACK: "https://github.com/lshoy/bronnypack/releases/latest/download/BronnyPack.mrpack?nocache=${MRPACK_NOCACHE}"
+      MODRINTH_MODPACK: "https://github.com/lshoy/bronnypack/releases/latest/download/BronnyPack.mrpack?nocache=${MRPACK_NOCACHE:-0}"
 
-      # Server access
-      ENABLE_RCON: "TRUE"
-      RCON_PASSWORD: "poopscoop2"
+      # Bump this to force "modpack refresh" logic when desired; manifest-based refresh in pre-init clears
+      # /data/mods automatically when the published modpack version changes.
+      MRPACK_NOCACHE: "1"
+
+      # Explicit world folder name for datapack path
+      LEVEL: "world"
 
       ALLOW_FLIGHT: "TRUE"
 
-      # Bump this to force a fresh download of the .mrpack (avoids CDN caching)
-      MRPACK_NOCACHE: "2025-10-12-1"
+      # Always re-evaluate the mrpack manifest (mods update/remove as needed)
+      MODRINTH_FORCE_SYNCHRONIZE: "true"
 
-      # Avoid pruning/removing files not in the modpack (preserve local configs)
-      MODRINTH_FORCE_SYNCHRONIZE: "false"
+      # Never let overrides touch persisted configs or datapacks
+      MODRINTH_OVERRIDES_EXCLUSIONS: |
+        config/**
+        world/datapacks/**
 
-      # Turn off the image’s built-in include/exclude heuristics
-      MODRINTH_DEFAULT_EXCLUDE_INCLUDES: ""
-
-      # Auto-enable AllTheMons datapack on NEW worlds (expects world/datapacks/AllTheMons.zip)
-      INITIAL_ENABLED_PACKS: "vanilla, file/AllTheMons"
-
-      # Auto-install AllTheMons datapack into the CURRENT world's datapacks folder
-      DOWNLOAD_URLS: |
-        https://cdn.modrinth.com/data/JV5dvqVX/versions/ulwWbVUc/AllTheMons%20Release%202.4.zip -> /data/world/datapacks/AllTheMons.zip
-
-      # Auto-enable the datapack on server start (for existing world)
-      RCON_CMDS_STARTUP: |
-        datapack enable "file/AllTheMons"
-        reload
-
-      # Distribute the AllTheMons resource pack to clients (direct CDN url + SHA1 recommended)
-      RESOURCE_PACK: "https://cdn.modrinth.com/data/JV5dvqVX/versions/ulwWbVUc/AllTheMons%20Release%202.4.zip"
-      RESOURCE_PACK_SHA1: "B4C519A3620D036C17B7DAA20D44B962E9B32A9B"
-
-      # Exclude only the client-only mods actually in your mrpack (newline-separated partial names)
+      # Drop client-only mods by partial jar names (optional list retained)
       MODRINTH_EXCLUDE_FILES: |
         athena-
         betterbeaconeffects-
@@ -78,17 +65,27 @@ services:
         particlerain-
         skinlayers3d-
         sodium-
+        vinurl-
         XaeroZoomout-
         zume-
-        # Also exclude local server configs from being overwritten by modpack overrides
-        config/cobblemon/main.json
-        config/rctmod-server.toml
- 
-      # skip temp connector jars bundled in overrides, if present
-      MODRINTH_OVERRIDES_EXCLUSIONS: |
-        mods/.connector/**
-        config/**
+
+      # Fetch and place AllTheMons datapack for the existing world
+      DOWNLOAD_EXTRA_CONFIGS: |
+        world/datapacks<https://cdn.modrinth.com/data/qoL4kNxC/versions/4i8KszCj/CCC_MAL1.7.3.zip
+
+      # Enable the datapack on startup and confirm it in the log
+      RCON_CMDS_STARTUP: |
+        datapack enable "file/AllTheMons" last
+        datapack list enabled
+
+      # Distribute the AllTheMons resource pack to clients
+      RESOURCE_PACK: "https://cdn.modrinth.com/data/qoL4kNxC/versions/4i8KszCj/CCC_MAL1.7.3.zip"
+      RESOURCE_PACK_SHA1: "A1C36CD993A8DA1A2450CBEBD84617370282E874"
+
+      # RCON access for startup commands
+      ENABLE_RCON: "TRUE"
+      RCON_PASSWORD: "poopscoop2"
     volumes:
       - ./data:/data
-    restart: unless-stopped
+    restart: no
     stop_grace_period: 2m
