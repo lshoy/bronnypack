@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "name": "BronnyPack",
-  "version": "v1.0.5",
+  "version": "v1.0.6",
   "files": [
     {
-      "url": "https://github.com/lshoy/bronnypack/releases/download/v1.0.5/BronnyPack.mrpack",
-      "sha256": "14a6ccfe467fa7e90f0023d8e4838184644cf1484567e5da2c21be5d8884b2cf",
-      "size": 35072956,
+      "url": "https://github.com/lshoy/bronnypack/releases/download/v1.0.6/BronnyPack.mrpack",
+      "sha256": "214f5396acd4d18676a1fab935c080e3ba25816aba4b341fa5b34927b267cd56",
+      "size": 35073832,
       "primary": true
     }
   ],
